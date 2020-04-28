@@ -1,4 +1,4 @@
-package main
+package notes
 
 import (
 	"context"
@@ -147,7 +147,7 @@ func getOrCreateGist(token string, markdownFilePath string, GistID string) strin
 	return *gistResponse.ID
 }
 
-func doCloudSync() {
+func DoCloudSync() {
 	fmt.Println("Syncing your gists....")
 	loader := spinner.New(spinner.CharSets[36], 100*time.Millisecond)
 	loader.Start()
@@ -184,7 +184,7 @@ func doCloudSync() {
 	fmt.Println("Done!")
 }
 
-func runEditor(cmd *exec.Cmd) error {
+func RunEditor(cmd *exec.Cmd) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
@@ -200,7 +200,7 @@ func isVimEditor(editor string) bool {
 	return false
 }
 
-func getWorkingTextEditorWithFileBrowsingSupport() string {
+func GetWorkingTextEditorWithFileBrowsingSupport() string {
 	commands := [...]string{"vim", "vi", "nvim", "emacs"}
 	prefixPath := [...]string{"/usr/bin/", "/usr/local/bin/"}
 	for i := 0; i < len(commands); i++ {
@@ -216,7 +216,7 @@ func getWorkingTextEditorWithFileBrowsingSupport() string {
 	return ""
 }
 
-func getEditorCommand(editor string, mode string) *exec.Cmd {
+func GetEditorCommand(editor string, mode string) *exec.Cmd {
 	// fmt.Println("editor",editor)
 	currentTime := time.Now()
 	// fmt.Println(currentTime.Format("2006-01-02"))
@@ -227,7 +227,6 @@ func getEditorCommand(editor string, mode string) *exec.Cmd {
 	} else {
 		filename = dataDirPath
 	}
-	
 	// fmt.Println(filename)
 
 	if isVimEditor(editor) && mode == "write" {
@@ -237,43 +236,3 @@ func getEditorCommand(editor string, mode string) *exec.Cmd {
 	return exec.Command(editor, filename)
 }
 
-func showUsage() {
-	helpMessage := `notes - A simple note-taking app
-Usage: notes [OPTIONS]
-Options:
-	write -  write in markdown file created with today's date stamp
-	read - browse all notes in terminal file browser
-	sync - upload all markdown files to your github  as Private Gist
-Example:
-notes write
-notes read
-notes sync
-`
-	fmt.Println(helpMessage)
-}
-
-func main() {
-	if len(os.Args) == 1 {
-		showUsage()
-		return
-	}
-	mode := os.Args[1]
-	editor, exists := os.LookupEnv("EDITOR")		
-	if exists == false {
-		fmt.Println("EDITOR not set in your enviornment!")
-		fmt.Println("edit your env(~/.bashrc etc) and write export EDITOR='vim'")
-	}
-	if mode == "write" {
-		cmd := getEditorCommand(editor, mode)
-		runEditor(cmd)
-	} else if mode == "read" {
-		editor := getWorkingTextEditorWithFileBrowsingSupport()
-		cmd := getEditorCommand(editor, mode)
-		runEditor(cmd)
-	} else if mode == "sync" {
-		doCloudSync()
-	} else {
-		showUsage()
-	}
-	
-}
