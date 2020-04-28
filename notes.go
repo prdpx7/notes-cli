@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -96,11 +95,6 @@ func getAllLocalNotesFiles() []string {
 	return markdownsFiles
 }
 
-func getMarkdownFilename(filePath string) string {
-	tmp := strings.Split(filePath, "/")
-	return tmp[len(tmp)-1]
-}
-
 func getOrCreateGist(token string, markdownFilePath string, GistID string) string {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -109,12 +103,12 @@ func getOrCreateGist(token string, markdownFilePath string, GistID string) strin
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
-	markdownFileName := getMarkdownFilename(markdownFilePath)
+	markdownFileName := filepath.Base(markdownFilePath)
 	markdownFileContentByte, err := ioutil.ReadFile(markdownFilePath)
-	markdownFileContent := string(markdownFileContentByte)
 	if err != nil {
 		log.Fatal(err)
 	}
+	markdownFileContent := string(markdownFileContentByte)
 	tmpGistFile := github.GistFile{Filename: &markdownFileName, Content: &markdownFileContent}
 	var tmpFilesObj = map[github.GistFilename]github.GistFile{
 		github.GistFilename(markdownFileName): tmpGistFile,
