@@ -1,4 +1,4 @@
-module cli.go
+module notes
 
 go 1.14
 
