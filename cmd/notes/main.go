@@ -28,7 +28,7 @@ func main() {
 		return
 	}
 	mode := os.Args[1]
-	editor, exists := os.LookupEnv("EDITOR")		
+	editor, exists := os.LookupEnv("EDITOR")
 	if exists == false {
 		fmt.Println("EDITOR not set in your enviornment!")
 		fmt.Println("edit your env(~/.bashrc etc) and write export EDITOR='vim'")

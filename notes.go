@@ -21,8 +21,8 @@ import (
 const notesFilePathPrefix = "daily_notes_"
 
 // GistNotesMap - Offline mapping of local notes files with respective remote gist-ids
-type GistNotesMap struct { 
-	GistID string `json:"gist_id"`
+type GistNotesMap struct {
+	GistID   string `json:"gist_id"`
 	Filename string `json:"filename"`
 }
 
@@ -30,9 +30,9 @@ func getOrCreateNotesDir() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
-	} 
-	dirPath :=  homeDir + "/.notes/"
-	if _, err := os.Stat(dirPath); os.IsNotExist(err){
+	}
+	dirPath := homeDir + "/.notes/"
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		err := os.Mkdir(dirPath, 0700)
 		if err != nil {
 			log.Fatal(err)
@@ -43,7 +43,7 @@ func getOrCreateNotesDir() string {
 func getOrCreateNotesDataDir() string {
 	dirPath := getOrCreateNotesDir()
 	dataDirPath := dirPath + "data/"
-	if _, err := os.Stat(dataDirPath); os.IsNotExist(err){
+	if _, err := os.Stat(dataDirPath); os.IsNotExist(err) {
 		err := os.Mkdir(dataDirPath, 0700)
 		if err != nil {
 			log.Fatal(err)
@@ -55,7 +55,7 @@ func getOrCreateNotesDataDir() string {
 func getOrCreateNotesConfigDir() string {
 	dirPath := getOrCreateNotesDir()
 	configDirPath := dirPath + "config/"
-	if _, err := os.Stat(configDirPath); os.IsNotExist(err){
+	if _, err := os.Stat(configDirPath); os.IsNotExist(err) {
 		err := os.Mkdir(configDirPath, 0700)
 		if err != nil {
 			log.Fatal(err)
@@ -74,8 +74,7 @@ func getOrCreateLocalGistStore() string {
 	return localGistStore
 }
 
-
-func getGithubPersonalToken() (token string){
+func getGithubPersonalToken() (token string) {
 	token, exists := os.LookupEnv("GITHUB_PERSONAL_TOKEN")
 	if exists == false {
 		fmt.Println(`No GITHUB_PERSONAL_TOKEN found..!
@@ -88,7 +87,7 @@ export GITHUB_PERSONAL_TOKEN='asdaspersonaltoken123'`,
 	return token
 }
 
-func getAllLocalNotesFiles() ([] string) {
+func getAllLocalNotesFiles() []string {
 	dataDirPath := getOrCreateNotesDataDir()
 	markdownsFiles, err := filepath.Glob(dataDirPath + "*.md")
 	if err != nil {
@@ -102,7 +101,7 @@ func getMarkdownFilename(filePath string) string {
 	return tmp[len(tmp)-1]
 }
 
-func getOrCreateGist(token string, markdownFilePath string, GistID string) string{
+func getOrCreateGist(token string, markdownFilePath string, GistID string) string {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -117,7 +116,7 @@ func getOrCreateGist(token string, markdownFilePath string, GistID string) strin
 		log.Fatal(err)
 	}
 	tmpGistFile := github.GistFile{Filename: &markdownFileName, Content: &markdownFileContent}
-	var tmpFilesObj  = map[github.GistFilename] github.GistFile {
+	var tmpFilesObj = map[github.GistFilename]github.GistFile{
 		github.GistFilename(markdownFileName): tmpGistFile,
 	}
 	var gistVisibilityToPublic = false
@@ -125,8 +124,8 @@ func getOrCreateGist(token string, markdownFilePath string, GistID string) strin
 	// create gist
 	if GistID == "" {
 		tmpGistObj := github.Gist{
-			Files: tmpFilesObj, 
-			Public: &gistVisibilityToPublic, 
+			Files:       tmpFilesObj,
+			Public:      &gistVisibilityToPublic,
 			Description: &gistDescription,
 		}
 		gistResponse, _, err := client.Gists.Create(ctx, &tmpGistObj)
@@ -136,8 +135,8 @@ func getOrCreateGist(token string, markdownFilePath string, GistID string) strin
 		return *gistResponse.ID
 	}
 	tmpGistObj := github.Gist{
-		Files: tmpFilesObj, 
-		Public: &gistVisibilityToPublic, 
+		Files:       tmpFilesObj,
+		Public:      &gistVisibilityToPublic,
 		Description: &gistDescription, ID: &GistID,
 	}
 	gistResponse, _, err := client.Gists.Edit(ctx, GistID, &tmpGistObj)
@@ -156,11 +155,11 @@ func DoCloudSync() {
 	gistStoreFile, _ := ioutil.ReadFile(localGistStorePath)
 	data := []GistNotesMap{}
 	_ = json.Unmarshal([]byte(gistStoreFile), &data)
-	
+
 	localMarkdownsFiles := getAllLocalNotesFiles()
 
-	var filesToBeSynced []GistNotesMap 
-	for i:= 0; i < len(localMarkdownsFiles); i++ {
+	var filesToBeSynced []GistNotesMap
+	for i := 0; i < len(localMarkdownsFiles); i++ {
 		var fileFoundInStore = false
 		for j := 0; j < len(data); j++ {
 			if data[j].Filename == localMarkdownsFiles[i] {
@@ -174,12 +173,12 @@ func DoCloudSync() {
 		}
 	}
 	for i := 0; i < len(filesToBeSynced); i++ {
-		filesToBeSynced[i].GistID = getOrCreateGist(token ,filesToBeSynced[i].Filename, filesToBeSynced[i].GistID)
+		filesToBeSynced[i].GistID = getOrCreateGist(token, filesToBeSynced[i].Filename, filesToBeSynced[i].GistID)
 	}
 
 	syncedFileData, _ := json.MarshalIndent(filesToBeSynced, "", " ")
 
-	_ = ioutil.WriteFile(localGistStorePath ,syncedFileData, 0644)
+	_ = ioutil.WriteFile(localGistStorePath, syncedFileData, 0644)
 	loader.Stop()
 	fmt.Println("Done!")
 }
@@ -193,8 +192,8 @@ func RunEditor(cmd *exec.Cmd) error {
 
 func isVimEditor(editor string) bool {
 	re := regexp.MustCompile("(g|n|neo)?vim")
-	
-	if re.Match([]byte(editor)){
+
+	if re.Match([]byte(editor)) {
 		return true
 	}
 	return false
@@ -230,9 +229,8 @@ func GetEditorCommand(editor string, mode string) *exec.Cmd {
 	// fmt.Println(filename)
 
 	if isVimEditor(editor) && mode == "write" {
-		cmd := exec.Command(editor, "+normal Go",  filename)
+		cmd := exec.Command(editor, "+normal Go", filename)
 		return cmd
 	}
 	return exec.Command(editor, filename)
 }
-
