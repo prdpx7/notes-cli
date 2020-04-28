@@ -54,7 +54,7 @@ func getOrCreateNotesDataDir() string {
 
 func getOrCreateNotesConfigDir() string {
 	dirPath := getOrCreateNotesDir()
-	configDirPath := dirPath + "config/"
+	configDirPath := filepath.Join(dirPath, "config")
 	if _, err := os.Stat(configDirPath); os.IsNotExist(err) {
 		err := os.Mkdir(configDirPath, 0700)
 		if err != nil {
@@ -66,7 +66,7 @@ func getOrCreateNotesConfigDir() string {
 
 func getOrCreateLocalGistStore() string {
 	configDirPath := getOrCreateNotesConfigDir()
-	localGistStore := configDirPath + "gist_store.json"
+	localGistStore := filepath.Join(configDirPath, "gist_store.json")
 	_, err := os.Open(localGistStore)
 	if err != nil {
 		os.Create(localGistStore)
