@@ -2,14 +2,11 @@
 > A simple CLI app to take notes on markdown files
 
 ## Installation
-* Download the binary
-    ```
-    wget https://raw.githubusercontent.com/prdpx7/notes-cli/master/notes
-    ```
-* And copy into the /usr/local/bin directory
-    ```
-    sudo cp notes /usr/local/bin/notes
-    ```
+Install go, then
+```
+% go install github.com/prdpx7/notes.cli/cmd/notes
+```
+
 ## Usage
 ```
 notes - A simple note-taking app
