@@ -31,7 +31,7 @@ func getOrCreateNotesDir() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dirPath := homeDir + "/.notes/"
+	dirPath := filepath.Join(homeDir, ".notes")
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		err := os.Mkdir(dirPath, 0700)
 		if err != nil {
@@ -42,7 +42,7 @@ func getOrCreateNotesDir() string {
 }
 func getOrCreateNotesDataDir() string {
 	dirPath := getOrCreateNotesDir()
-	dataDirPath := dirPath + "data/"
+	dataDirPath := filepath.Join(dirPath, "data")
 	if _, err := os.Stat(dataDirPath); os.IsNotExist(err) {
 		err := os.Mkdir(dataDirPath, 0700)
 		if err != nil {
@@ -89,7 +89,7 @@ export GITHUB_PERSONAL_TOKEN='asdaspersonaltoken123'`,
 
 func getAllLocalNotesFiles() []string {
 	dataDirPath := getOrCreateNotesDataDir()
-	markdownsFiles, err := filepath.Glob(dataDirPath + "*.md")
+	markdownsFiles, err := filepath.Glob(filepath.Join(dataDirPath, "*.md"))
 	if err != nil {
 		log.Fatal(err)
 	}
