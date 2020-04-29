@@ -7,7 +7,9 @@ notes
 # Folders
 _obj
 _test
-
+MD5SUMS
+SHA512SUMS
+*.tar.gz
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out
