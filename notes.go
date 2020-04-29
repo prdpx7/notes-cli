@@ -210,18 +210,14 @@ func getWorkingTextEditorWithFileBrowsingSupport() string {
 }
 
 func getEditorCommand(editor string, mode string) *exec.Cmd {
-	// fmt.Println("editor",editor)
 	currentTime := time.Now()
-	// fmt.Println(currentTime.Format("2006-01-02"))
 	var filename string
 	dataDirPath := getOrCreateNotesDataDir()
 	if mode == "write" {
-		filename = dataDirPath + notesFilePathPrefix + currentTime.Format("2006_01_02") + ".md"
+		filename = filepath.Join(dataDirPath, notesFilePathPrefix + currentTime.Format("2006_01_02") + ".md")
 	} else {
 		filename = dataDirPath
 	}
-
-	// fmt.Println(filename)
 
 	if isVimEditor(editor) && mode == "write" {
 		cmd := exec.Command(editor, "+normal Go", filename)
