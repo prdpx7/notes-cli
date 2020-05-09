@@ -1,4 +1,4 @@
-module notes-cli
+module github.com/prdpx7/notes-cli
 
 go 1.14
 
