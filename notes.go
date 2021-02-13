@@ -18,6 +18,7 @@ import (
 )
 
 const notesFilePathPrefix = "daily_notes_"
+const notesGistDescription = "Daily Notes via notes app"
 
 // GistNotesMap - Offline mapping of local notes files with respective remote gist-ids
 type GistNotesMap struct {
@@ -74,12 +75,12 @@ func getOrCreateLocalGistStore() string {
 }
 
 func getGithubPersonalToken() (token string) {
-	token, exists := os.LookupEnv("GITHUB_PERSONAL_TOKEN")
+	token, exists := os.LookupEnv("GITHUB_CREATE_GIST_TOKEN")
 	if exists == false {
-		fmt.Println(`No GITHUB_PERSONAL_TOKEN found..!
-You can get your personal token from https://github.com/settings/tokens/
+		fmt.Println(`No GITHUB_CREATE_GIST_TOKEN found..!
+You can get your personal token from https://github.com/settings/tokens/new?scopes=gist&description=notes-cli
 Paste the following line in your ~/.bashrc or ~/.zshrc
-export GITHUB_PERSONAL_TOKEN='asdaspersonaltoken123'`,
+export GITHUB_CREATE_GIST_TOKEN='<token>'`,
 		)
 		os.Exit(1)
 	}
@@ -93,6 +94,30 @@ func getAllLocalNotesFiles() []string {
 		log.Fatal(err)
 	}
 	return markdownsFiles
+}
+
+func getGists(token string) []*github.Gist {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+	var allGists []*github.Gist
+	for {
+		opt := &github.GistListOptions{ListOptions: github.ListOptions{PerPage: 100}}
+		gists, resp, err := client.Gists.List(ctx, "", opt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		allGists = append(allGists, gists...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+	return allGists
 }
 
 func getOrCreateGist(token string, markdownFilePath string, GistID string) string {
@@ -114,8 +139,8 @@ func getOrCreateGist(token string, markdownFilePath string, GistID string) strin
 		github.GistFilename(markdownFileName): tmpGistFile,
 	}
 	var gistVisibilityToPublic = false
-	var gistDescription = "Daily Notes via notes app"
 	// create gist
+	gistDescription := notesGistDescription
 	if GistID == "" {
 		tmpGistObj := github.Gist{
 			Files:       tmpFilesObj,
@@ -140,10 +165,13 @@ func getOrCreateGist(token string, markdownFilePath string, GistID string) strin
 	return *gistResponse.ID
 }
 
-func doCloudSync() {
-	fmt.Println("Syncing your gists....")
-	loader := spinner.New(spinner.CharSets[36], 100*time.Millisecond)
-	loader.Start()
+func doDownSync() {
+	// download all gists with `daily_notes` prefix
+	// TODO
+}
+
+func doUpSync() {
+	// upload local gists
 	token := getGithubPersonalToken()
 	localGistStorePath := getOrCreateLocalGistStore()
 	gistStoreFile, _ := ioutil.ReadFile(localGistStorePath)
@@ -173,6 +201,14 @@ func doCloudSync() {
 	syncedFileData, _ := json.MarshalIndent(filesToBeSynced, "", " ")
 
 	_ = ioutil.WriteFile(localGistStorePath, syncedFileData, 0644)
+}
+
+func performSync() {
+	fmt.Println("Syncing your gists....")
+	loader := spinner.New(spinner.CharSets[36], 100*time.Millisecond)
+	loader.Start()
+	doUpSync()
+	doDownSync()
 	loader.Stop()
 	fmt.Println("Done!")
 }
@@ -214,7 +250,7 @@ func getEditorCommand(editor string, mode string) *exec.Cmd {
 	var filename string
 	dataDirPath := getOrCreateNotesDataDir()
 	if mode == "write" {
-		filename = filepath.Join(dataDirPath, notesFilePathPrefix + currentTime.Format("2006_01_02") + ".md")
+		filename = filepath.Join(dataDirPath, notesFilePathPrefix+currentTime.Format("2006_01_02")+".md")
 	} else {
 		filename = dataDirPath
 	}
@@ -260,7 +296,7 @@ func main() {
 		cmd := getEditorCommand(editor, mode)
 		runEditor(cmd)
 	} else if mode == "sync" {
-		doCloudSync()
+		performSync()
 	} else {
 		showUsage()
 	}
